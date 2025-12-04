@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinapse Coletiva</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset e configurações gerais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bg-color: #121214;
+            --panel-color: #1e1e24;
+            --accent-color: #00aeff;
+            --good-color: #00c878;
+            --bad-color: #ff5050;
+            --text-color: #e6e6e6;
+            --hover-color: #28282c;
+            --border-radius: 10px;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            min-height: 600px;
+            background-color: var(--panel-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Tela de carregamento/fade */
+        .fade-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity var(--transition-speed);
+            pointer-events: none;
+        }
+
+        .fade-overlay.hidden {
+            opacity: 0;
+        }
+
+        /* Tela do menu principal */
+        .screen {
+            padding: 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .screen.hidden {
+            display: none;
+        }
+
+        /* Título */
+        .title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title h1 {
+            font-size: 48px;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .title p {
+            font-size: 20px;
+            color: #aaa;
+        }
+
+        /* Botões */
+        .btn {
+            background-color: var(--panel-color);
+            color: var(--text-color);
+            border: 2px solid #333;
+            border-radius: var(--border-radius);
+            padding: 18px 30px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            width: 100%;
+            max-width: 400px;
+            margin: 10px 0;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn.accent {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn.good {
+            border-color: var(--good-color);
+            color: var(--good-color);
+        }
+
+        .btn.bad {
+            border-color: var(--bad-color);
+            color: var(--bad-color);
+        }
+
+        /* Tela de jogo */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .level-info {
+            font-size: 24px;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .question-counter {
+            font-size: 20px;
+            color: #aaa;
+        }
+
+        .question-panel {
+            background-color: #25252d;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            width: 100%;
+            margin-bottom: 30px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .question-text {
+            font-size: 28px;
+            text-align: center;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+
+        .options-container {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .option-btn {
+            background-color: #28282c;
+            border: 2px solid #333;
+            border-radius: var(--border-radius);
+            padding: 18px 25px;
+            margin: 12px 0;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            font-size: 20px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover {
+            background-color: #333;
+            transform: translateX(5px);
+        }
+
+        .option-letter {
+            background-color: var(--accent-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        /* Barra de progresso */
+        .progress-container {
+            width: 100%;
+            margin: 25px 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent-color);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        /* Feedback */
+        .feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            font-weight: 800;
+            padding: 30px 50px;
+            border-radius: var(--border-radius);
+            z-index: 50;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .feedback.show {
+            opacity: 1;
+        }
+
+        .feedback.correct {
+            color: var(--good-color);
+            background-color: rgba(0, 200, 120, 0.1);
+            border: 4px solid var(--good-color);
+        }
+
+        .feedback.incorrect {
+            color: var(--bad-color);
+            background-color: rgba(255, 80, 80, 0.1);
+            border: 4px solid var(--bad-color);
+        }
+
+        /* Tela de resultado */
+        .result-panel {
+            background-color: #25252d;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .result-title {
+            font-size: 40px;
+            color: var(--accent-color);
+            margin-bottom: 30px;
+        }
+
+        .score-display {
+            font-size: 60px;
+            margin: 30px 0;
+            font-weight: 800;
+        }
+
+        .score-message {
+            font-size: 24px;
+            margin-bottom: 40px;
+            color: #aaa;
+        }
+
+        /* Botões de ação */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            min-width: 200px;
+        }
+
+        /* Sons e acessibilidade */
+        .sound-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .sound-toggle {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            cursor: pointer;
+            color: #777;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                min-height: auto;
+            }
+            
+            .screen {
+                padding: 20px;
+            }
+            
+            .title h1 {
+                font-size: 36px;
+            }
+            
+            .question-text {
+                font-size: 22px;
+            }
+            
+            .option-btn {
+                font-size: 18px;
+                padding: 15px 20px;
+            }
+            
+            .result-panel {
+                padding: 20px;
+            }
+            
+            .result-title {
+                font-size: 32px;
+            }
+            
+            .score-display {
+                font-size: 48px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Overlay de transição -->
+        <div class="fade-overlay" id="fadeOverlay"></div>
+        
+        <!-- Feedback de acerto/erro -->
+        <div class="feedback" id="feedback">
+            <span id="feedbackText">ACERTOU!</span>
+        </div>
+        
+        <!-- Tela do Menu -->
+        <div class="screen" id="menuScreen">
+            <div class="title">
+                <h1>SINAPSE COLETIVA</h1>
+                <p>Escolha o nível de dificuldade</p>
+            </div>
+            
+            <button class="btn accent" id="easyBtn">
+                <i class="fas fa-seedling"></i>&nbsp; Fácil
+            </button>
+            
+            <button class="btn accent" id="mediumBtn">
+                <i class="fas fa-tree"></i>&nbsp; Médio
+            </button>
+            
+            <button class="btn accent" id="hardBtn">
+                <i class="fas fa-mountain"></i>&nbsp; Difícil
+            </button>
+            
+            <button class="btn bad" id="exitBtn">
+                <i class="fas fa-sign-out-alt"></i>&nbsp; Sair
+            </button>
+            
+            <div class="sound-info">
+                <i class="fas fa-volume-up"></i> Sons habilitados
+            </div>
+        </div>
+        
+        <!-- Tela do Jogo -->
+        <div class="screen hidden" id="gameScreen">
+            <div class="game-header">
+                <div class="level-info" id="levelInfo">Fácil</div>
+                <div class="question-counter" id="questionCounter">Pergunta 1/5</div>
+            </div>
+            
+            <div class="question-panel">
+                <div class="question-text" id="questionText">
+                    Um pato está na frente de dois patos, atrás de dois patos e entre dois patos. Quantos patos existem?
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Progresso</span>
+                    <span id="progressText">0/5</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <div class="options-container" id="optionsContainer">
+                <!-- Opções serão geradas dinamicamente -->
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn action-btn" id="backToMenuBtn">
+                    <i class="fas fa-arrow-left"></i>&nbsp; Voltar ao Menu
+                </button>
+                <button class="btn bad action-btn" id="gameExitBtn">
+                    <i class="fas fa-sign-out-alt"></i>&nbsp; Sair
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tela de Resultado -->
+        <div class="screen hidden" id="resultScreen">
+            <div class="title">
+                <h1>RESULTADO</h1>
+            </div>
+            
+            <div class="result-panel">
+                <div class="result-title">Desempenho</div>
+                <div class="score-display" id="scoreDisplay">0/5</div>
+                <div class="score-message" id="scoreMessage">Continue praticando!</div>
+                
+                <div class="action-buttons">
+                    <button class="btn good action-btn" id="restartBtn">
+                        <i class="fas fa-redo"></i>&nbsp; Jogar Novamente
+                    </button>
+                    <button class="btn action-btn" id="resultMenuBtn">
+                        <i class="fas fa-home"></i>&nbsp; Voltar ao Menu
+                    </button>
+                    <button class="btn bad action-btn" id="resultExitBtn">
+                        <i class="fas fa-sign-out-alt"></i>&nbsp; Sair
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sound-toggle" id="soundToggle">
+            <i class="fas fa-volume-up"></i>
+            <span>Sons ligados</span>
+        </div>
+    </div>
+
+    <script>
+        // Dados do jogo - mesmas perguntas do código Python
+        const perguntas = {
+            "Fácil": [
+                {
+                    "p": "Um pato está na frente de dois patos,\natrás de dois patos e entre dois patos.\nQuantos patos existem?",
+                    "ops": ["3", "4", "5"],
+                    "c": 0
+                },
+                {
+                    "p": "Quantos graus o ponteiro das horas se move por hora?",
+                    "ops": ["15°", "30°", "45°"],
+                    "c": 1
+                },
+                {
+                    "p": "Qual número vem a seguir?\n2, 4, 6, 8...",
+                    "ops": ["10", "12", "14"],
+                    "c": 0
+                },
+                {
+                    "p": "Qual forma tem 4 lados iguais?",
+                    "ops": ["Triângulo", "Retângulo", "Quadrado"],
+                    "c": 2
+                },
+                {
+                    "p": "Se 1 → 2, 2 → 4, 3 → 6…\n5 → ?",
+                    "ops": ["10", "12", "14"],
+                    "c": 0
+                }
+            ],
+            "Médio": [
+                {
+                    "p": "As caixas estão rotuladas errado.\nQual abrir?",
+                    "ops": ["Maçãs e Laranjas", "Maçãs", "Laranjas"],
+                    "c": 0
+                },
+                {
+                    "p": "Maria é mãe de João.\nJoão não é filho de Maria. Como?",
+                    "ops": ["Adotado", "João é menina", "Sobrinho"],
+                    "c": 1
+                },
+                {
+                    "p": "Se você ultrapassa o 2º colocado,\nqual posição assume?",
+                    "ops": ["1º", "2º", "3º"],
+                    "c": 1
+                },
+                {
+                    "p": "Relógio marca 3h.\nQuantos graus o ponteiro andou desde 12h?",
+                    "ops": ["90°", "45°", "120°"],
+                    "c": 0
+                },
+                {
+                    "p": "Sequência: 1,1,2,3,5,8...\nQual o próximo?",
+                    "ops": ["10", "11", "13"],
+                    "c": 2
+                }
+            ],
+            "Difícil": [
+                {
+                    "p": "3 interruptores, 1 lâmpada.\nComo descobrir o certo?",
+                    "ops": ["Chutar", "Aquecendo e testando", "Entrando várias vezes"],
+                    "c": 1
+                },
+                {
+                    "p": "O pai desse homem é filho do meu pai.\nQuem está na foto?",
+                    "ops": ["Seu pai", "Seu filho", "Ele mesmo"],
+                    "c": 1
+                },
+                {
+                    "p": "Fazendeiro: lobo, cabra e repolho.\nQuem atravessa primeiro?",
+                    "ops": ["Lobo", "Cabra", "Repolho"],
+                    "c": 1
+                },
+                {
+                    "p": "Um = 3\nDois = 4\nTrês = 4\nQuatro = 6\nCinco = ?",
+                    "ops": ["4", "5", "3"],
+                    "c": 1
+                },
+                {
+                    "p": "2 pais e 2 filhos entram, mas são 3 pessoas.\nComo?",
+                    "ops": ["Erro", "3 gerações", "Gêmeos"],
+                    "c": 1
+                }
+            ]
+        };
+
+        // Elementos da interface
+        const screens = {
+            menu: document.getElementById('menuScreen'),
+            game: document.getElementById('gameScreen'),
+            result: document.getElementById('resultScreen')
+        };
+        
+        const fadeOverlay = document.getElementById('fadeOverlay');
+        const feedback = document.getElementById('feedback');
+        const feedbackText = document.getElementById('feedbackText');
+        
+        // Elementos do jogo
+        const levelInfo = document.getElementById('levelInfo');
+        const questionCounter = document.getElementById('questionCounter');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+        
+        // Elementos do resultado
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const scoreMessage = document.getElementById('scoreMessage');
+        
+        // Estado do jogo
+        let currentLevel = null;
+        let questionIndex = 0;
+        let score = 0;
+        let soundEnabled = true;
+        let gameState = 'menu'; // 'menu', 'game', 'result'
+        
+        // Sons (usando Web Audio API para simplicidade)
+        const playSound = (type) => {
+            if (!soundEnabled) return;
+            
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                if (type === 'success') {
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } else if (type === 'error') {
+                    oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // A3
+                    oscillator.frequency.setValueAtTime(196, audioContext.currentTime + 0.1); // G3
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                }
+            } catch (e) {
+                console.log("Som não suportado neste navegador");
+            }
+        };
+        
+        // Transições entre telas
+        const transitionToScreen = (screenName) => {
+            // Ativa o overlay de fade
+            fadeOverlay.classList.remove('hidden');
+            
+            // Aguarda um momento para mostrar o fade
+            setTimeout(() => {
+                // Esconde todas as telas
+                Object.values(screens).forEach(screen => {
+                    screen.classList.add('hidden');
+                });
+                
+                // Mostra a tela desejada
+                screens[screenName].classList.remove('hidden');
+                gameState = screenName;
+                
+                // Remove o fade
+                setTimeout(() => {
+                    fadeOverlay.classList.add('hidden');
+                }, 300);
+            }, 300);
+        };
+        
+        // Iniciar jogo com nível selecionado
+        const startGame = (level) => {
+            currentLevel = level;
+            questionIndex = 0;
+            score = 0;
+            
+            levelInfo.textContent = level;
+            updateGameDisplay();
+            transitionToScreen('game');
+        };
+        
+        // Atualizar tela do jogo
+        const updateGameDisplay = () => {
+            const questionData = perguntas[currentLevel][questionIndex];
+            
+            // Atualiza texto da pergunta
+            questionText.textContent = questionData.p;
+            
+            // Atualiza contador
+            questionCounter.textContent = `Pergunta ${questionIndex + 1}/5`;
+            progressText.textContent = `${questionIndex}/5`;
+            
+            // Atualiza barra de progresso
+            const progressPercent = (questionIndex / 5) * 100;
+            progressFill.style.width = `${progressPercent}%`;
+            
+            // Limpa opções anteriores
+            optionsContainer.innerHTML = '';
+            
+            // Adiciona novas opções
+            const letters = ['A', 'B', 'C'];
+            questionData.ops.forEach((option, index) => {
+                const optionBtn = document.createElement('div');
+                optionBtn.className = 'option-btn';
+                optionBtn.innerHTML = `
+                    <div class="option-letter">${letters[index]}</div>
+                    <div class="option-text">${option}</div>
+                `;
+                
+                optionBtn.addEventListener('click', () => selectOption(index));
+                optionsContainer.appendChild(optionBtn);
+            });
+        };
+        
+        // Selecionar uma opção
+        const selectOption = (selectedIndex) => {
+            const questionData = perguntas[currentLevel][questionIndex];
+            const isCorrect = selectedIndex === questionData.c;
+            
+            // Desabilita cliques nas opções
+            const optionButtons = document.querySelectorAll('.option-btn');
+            optionButtons.forEach(btn => {
+                btn.style.pointerEvents = 'none';
+            });
+            
+            // Mostra feedback
+            if (isCorrect) {
+                score++;
+                feedbackText.textContent = "ACERTOU!";
+                feedback.className = 'feedback show correct';
+                if (soundEnabled) playSound('success');
+            } else {
+                feedbackText.textContent = "ERRADO!";
+                feedback.className = 'feedback show incorrect';
+                if (soundEnabled) playSound('error');
+            }
+            
+            // Aguarda 1.5 segundos antes de continuar
+            setTimeout(() => {
+                feedback.className = 'feedback';
+                
+                // Próxima pergunta ou mostra resultado
+                questionIndex++;
+                
+                if (questionIndex < 5) {
+                    // Reativa cliques nas opções
+                    optionButtons.forEach(btn => {
+                        btn.style.pointerEvents = 'auto';
+                    });
+                    updateGameDisplay();
+                } else {
+                    showResult();
+                }
+            }, 1500);
+        };
+        
+        // Mostrar tela de resultado
+        const showResult = () => {
+            scoreDisplay.textContent = `${score}/5`;
+            
+            if (score >= 3) {
+                scoreMessage.textContent = "Muito bom!";
+            } else {
+                scoreMessage.textContent = "Continue praticando!";
+            }
+            
+            transitionToScreen('result');
+        };
+        
+        // Configuração de eventos
+        document.getElementById('easyBtn').addEventListener('click', () => startGame('Fácil'));
+        document.getElementById('mediumBtn').addEventListener('click', () => startGame('Médio'));
+        document.getElementById('hardBtn').addEventListener('click', () => startGame('Difícil'));
+        
+        document.getElementById('exitBtn').addEventListener('click', () => {
+            if (confirm('Deseja realmente sair do jogo?')) {
+                // Em uma aplicação web, não podemos fechar a janela automaticamente
+                // Mas podemos mostrar uma mensagem
+                alert('Obrigado por jogar Sinapse Coletiva!');
+            }
+        });
+        
+        document.getElementById('backToMenuBtn').addEventListener('click', () => transitionToScreen('menu'));
+        document.getElementById('gameExitBtn').addEventListener('click', () => {
+            if (confirm('Deseja sair do jogo? Seu progresso será perdido.')) {
+                transitionToScreen('menu');
+            }
+        });
+        
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            if (currentLevel) {
+                startGame(currentLevel);
+            }
+        });
+        
+        document.getElementById('resultMenuBtn').addEventListener('click', () => transitionToScreen('menu'));
+        document.getElementById('resultExitBtn').addEventListener('click', () => {
+            if (confirm('Deseja realmente sair do jogo?')) {
+                alert('Obrigado por jogar Sinapse Coletiva!');
+            }
+        });
+        
+        // Controle de som
+        const soundToggle = document.getElementById('soundToggle');
+        const soundIcon = soundToggle.querySelector('i');
+        const soundText = soundToggle.querySelector('span');
+        
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            
+            if (soundEnabled) {
+                soundIcon.className = 'fas fa-volume-up';
+                soundText.textContent = 'Sons ligados';
+            } else {
+                soundIcon.className = 'fas fa-volume-mute';
+                soundText.textContent = 'Sons desligados';
+            }
+        });
+        
+        // Inicialização
+        window.addEventListener('load', () => {
+            // Pequena animação de entrada
+            fadeOverlay.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
